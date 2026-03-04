@@ -251,8 +251,8 @@
                                     </div>
                                 </div>
                                 <div class="pb-item__controls">
-                                    <span class="pb-qty-value" data-role="qty">0</span>
                                     <button class="pb-qty-btn" type="button" data-action="dec" aria-label="Уменьшить">−</button>
+                                    <span class="pb-qty-value" data-role="qty">0</span>
                                     <button class="pb-qty-btn" type="button" data-action="inc" aria-label="Увеличить">+</button>
                                 </div>
                             </article>
@@ -540,15 +540,15 @@
 
     function updateCustomQty(delta) {
         if (!ui.customProductQty) return;
-        const current = clamp(Number(ui.customProductQty.value || 1), 1, 99);
+        const current = clamp(Number(ui.customProductQty.textContent || 1), 1, 99);
         const next = clamp(current + delta, 1, 99);
-        ui.customProductQty.value = String(next);
+        ui.customProductQty.textContent = String(next);
     }
 
     function addCustomProduct() {
         const name = ui.customProductName?.value.trim() || "";
         const rawPrice = ui.customProductPrice?.value;
-        const rawQty = ui.customProductQty?.value;
+        const rawQty = ui.customProductQty?.textContent;
         const categoryId = ui.customProductCategory?.value || "extra";
         const normalizedName = normalizeItemName(name);
 
@@ -574,7 +574,7 @@
             render();
             showToast("Товар уже есть в списке и добавлен в корзину");
             if (ui.customProductName) ui.customProductName.value = "";
-            if (ui.customProductQty) ui.customProductQty.value = "1";
+            if (ui.customProductQty) ui.customProductQty.textContent = "1";
             ui.customProductName?.focus();
             return;
         }
@@ -602,7 +602,7 @@
         showToast("Свой товар добавлен");
         if (ui.customProductName) ui.customProductName.value = "";
         if (ui.customProductPrice) ui.customProductPrice.value = "";
-        if (ui.customProductQty) ui.customProductQty.value = "1";
+        if (ui.customProductQty) ui.customProductQty.textContent = "1";
         ui.customProductName?.focus();
     }
 

@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="description" content="Личный конструктор подарочной корзины: выбирайте товары по категориям, считайте итог и отправляйте состав в WhatsApp.">
     <meta name="theme-color" content="#f46d26">
     <title>Личный конструктор корзины | Куда Себет</title>
@@ -53,10 +53,10 @@
                     <form class="pb-custom-add__form" id="customProductForm">
                         <input class="pb-custom-input" id="customProductName" type="text" maxlength="80" placeholder="Название товара" required>
                         <input class="pb-custom-input" id="customProductPrice" type="number" min="0" max="100000" step="1" inputmode="numeric" placeholder="Цена, сом" required>
-                        <div class="pb-custom-qty" role="group" aria-label="Количество товара">
-                            <input class="pb-custom-qty-input" id="customProductQty" type="text" value="1" readonly aria-label="Количество">
-                            <button class="pb-qty-btn pb-custom-qty-btn" type="button" id="customProductQtyDec" aria-label="Уменьшить количество">−</button>
-                            <button class="pb-qty-btn pb-custom-qty-btn" type="button" id="customProductQtyInc" aria-label="Увеличить количество">+</button>
+                        <div class="pb-item__controls pb-custom-qty" role="group" aria-label="Количество товара">
+                            <button class="pb-qty-btn" type="button" id="customProductQtyDec" aria-label="Уменьшить количество">−</button>
+                            <span class="pb-qty-value" id="customProductQty" aria-label="Количество">1</span>
+                            <button class="pb-qty-btn" type="button" id="customProductQtyInc" aria-label="Увеличить количество">+</button>
                         </div>
                         <select class="pb-custom-input" id="customProductCategory" required></select>
                         <button class="pb-btn pb-btn--light" type="submit" id="customProductAddBtn">Добавить свой товар</button>

@@ -251,23 +251,22 @@ a {
 
 .pb-item__controls {
     display: grid;
-    grid-template-columns: 52px 30px 30px;
-    gap: 6px;
+    grid-template-columns: 36px 38px 36px;
     align-items: center;
-    justify-content: end;
 }
 
 .pb-qty-btn {
-    width: 30px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     border: 1px solid #edc29b;
-    border-radius: 9px;
+    border-radius: 10px;
     background: #fff;
     color: #7c3811;
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 800;
     line-height: 1;
     cursor: pointer;
+    touch-action: manipulation;
 }
 
 .pb-qty-btn:hover,
@@ -277,15 +276,8 @@ a {
 }
 
 .pb-qty-value {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 34px;
-    border: 1px solid #edc29b;
-    border-radius: 9px;
-    background: #fffdfb;
     text-align: center;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 800;
 }
 
@@ -375,35 +367,29 @@ a {
     outline-offset: 1px;
 }
 
+.pb-custom-add__form select.pb-custom-input {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23864a24' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: 12px 8px;
+    background-position: right 14px center;
+    padding-right: 34px;
+}
+
 .pb-custom-qty {
-    display: grid;
-    grid-template-columns: 52px 30px 30px;
-    gap: 6px;
-    align-items: center;
     justify-self: start;
-}
-
-.pb-custom-qty-btn {
-    width: 30px;
-    height: 34px;
-}
-
-.pb-custom-qty-input {
-    width: 52px;
-    min-height: 34px;
-    border: 1px solid #eac5a2;
-    border-radius: 9px;
-    background: #fff;
-    color: #2f241b;
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 800;
-    text-align: center;
-    padding: 0 6px;
 }
 
 .pb-custom-add__form .pb-btn {
     width: 100%;
+}
+
+.pb-btn,
+.pb-float-cart,
+.pb-close-btn,
+.pb-back-link {
+    touch-action: manipulation;
 }
 
 .pb-selected-group {
@@ -739,28 +725,11 @@ a {
     }
 
     .pb-item {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 8px;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .pb-item__controls {
-        grid-template-columns: 46px 28px 28px;
-        gap: 5px;
         justify-content: end;
-    }
-
-    .pb-qty-btn {
-        width: 28px;
-        height: 30px;
-        font-size: 16px;
-        border-radius: 8px;
-    }
-
-    .pb-qty-value {
-        min-height: 30px;
-        font-size: 15px;
-        border-radius: 8px;
     }
 
     .pb-summary__head h2 {
@@ -777,20 +746,10 @@ a {
 
     .pb-custom-qty {
         justify-self: start;
-        grid-template-columns: 46px 28px 28px;
-        gap: 5px;
     }
 
-    .pb-custom-qty-btn {
-        width: 28px;
-        height: 30px;
-    }
-
-    .pb-custom-qty-input {
-        width: 46px;
-        min-height: 30px;
-        font-size: 15px;
-        border-radius: 8px;
+    .pb-custom-add__form select.pb-custom-input {
+        background-position: right 12px center;
     }
 }
 
