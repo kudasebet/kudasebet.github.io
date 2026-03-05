@@ -62,10 +62,31 @@
                         <button class="pb-btn pb-btn--light" type="submit" id="customProductAddBtn">Добавить свой товар</button>
                     </form>
                 </div>
+                <div class="pb-commission">
+                    <div class="pb-commission__head">
+                        <h3>Комиссия</h3>
+                        <p>Введите пароль, чтобы открыть функцию</p>
+                    </div>
+                    <div class="pb-commission__gate">
+                        <input class="pb-custom-input" id="commissionPassword" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="Пароль">
+                        <button class="pb-btn pb-btn--light" type="button" id="commissionUnlockBtn">Открыть</button>
+                    </div>
+                    <div class="pb-commission__hint" id="commissionHint">Секция закрыта.</div>
+                    <div class="pb-commission__controls" id="commissionControls" hidden>
+                        <input class="pb-custom-input" id="commissionPercent" type="number" min="0" max="300" step="0.1" inputmode="decimal" placeholder="Процент наценки, %">
+                        <button class="pb-btn pb-btn--light" type="button" id="commissionResetBtn">Сбросить наценку</button>
+                    </div>
+                </div>
                 <div class="pb-summary__footer">
                     <div class="pb-total-line"><span>Итого:</span><strong id="bottomSummaryTotal">0 сом</strong></div>
                     <div class="pb-summary__actions">
-                        <button class="pb-btn pb-btn--ghost" type="button" id="copyBottomBtn">Скопировать состав</button>
+                        <div class="pb-copy-dropdown">
+                            <button class="pb-btn pb-btn--ghost" type="button" id="copyBottomBtn">Скопировать состав</button>
+                            <button class="pb-btn pb-btn--ghost pb-copy-toggle" type="button" id="copyBottomMenuBtn" aria-label="Показать варианты копирования" aria-haspopup="menu" aria-expanded="false">▾</button>
+                            <div class="pb-copy-menu" id="copyBottomMenu" hidden>
+                                <button class="pb-copy-menu__item" type="button" id="copyBottomWithPricesBtn">Копировать с ценами</button>
+                            </div>
+                        </div>
                         <button class="pb-btn pb-btn--primary" type="button" id="sendBottomBtn">Отправить в WhatsApp</button>
                         <button class="pb-btn pb-btn--danger" type="button" id="clearBottomBtn">Очистить всё</button>
                     </div>
@@ -85,7 +106,13 @@
         <div class="pb-corner-cart__footer">
             <div class="pb-total-line"><span>Итого:</span><strong id="cornerCartTotal">0 сом</strong></div>
             <button class="pb-btn pb-btn--primary" type="button" id="sendCornerBtn">Заказать в Whatsapp</button>
-            <button class="pb-btn pb-btn--ghost" type="button" id="copyCornerBtn">Копировать</button>
+            <div class="pb-copy-dropdown">
+                <button class="pb-btn pb-btn--ghost" type="button" id="copyCornerBtn">Копировать</button>
+                <button class="pb-btn pb-btn--ghost pb-copy-toggle" type="button" id="copyCornerMenuBtn" aria-label="Показать варианты копирования" aria-haspopup="menu" aria-expanded="false">▾</button>
+                <div class="pb-copy-menu" id="copyCornerMenu" hidden>
+                    <button class="pb-copy-menu__item" type="button" id="copyCornerWithPricesBtn">Копировать с ценами</button>
+                </div>
+            </div>
             <button class="pb-btn pb-btn--danger" type="button" id="clearCornerBtn">Очистить</button>
         </div>
     </aside>
@@ -107,7 +134,13 @@
         <div class="pb-mobile-sheet__footer">
             <div class="pb-total-line"><span>Итого:</span><strong id="mobileCartTotal">0 сом</strong></div>
             <button class="pb-btn pb-btn--primary" type="button" id="sendMobileBtn">Отправить в WhatsApp</button>
-            <button class="pb-btn pb-btn--ghost" type="button" id="copyMobileBtn">Скопировать состав</button>
+            <div class="pb-copy-dropdown">
+                <button class="pb-btn pb-btn--ghost" type="button" id="copyMobileBtn">Скопировать состав</button>
+                <button class="pb-btn pb-btn--ghost pb-copy-toggle" type="button" id="copyMobileMenuBtn" aria-label="Показать варианты копирования" aria-haspopup="menu" aria-expanded="false">▾</button>
+                <div class="pb-copy-menu" id="copyMobileMenu" hidden>
+                    <button class="pb-copy-menu__item" type="button" id="copyMobileWithPricesBtn">Копировать с ценами</button>
+                </div>
+            </div>
             <button class="pb-btn pb-btn--danger" type="button" id="clearMobileBtn">Очистить всё</button>
         </div>
     </section>
@@ -122,6 +155,7 @@
 
     <div class="pb-toast" id="toast" aria-live="polite"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="./build/js/personal-builder.js"></script>
 </body>
 </html>

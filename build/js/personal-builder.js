@@ -1,8 +1,11 @@
-(() => {
+(async () => {
     const WA_PHONE = "996509130090";
     const SESSION_KEY = "kudasebet-personal-builder-v1";
+    const GOOGLE_SHEET_SHARE_URL = "https://docs.google.com/spreadsheets/d/1_MtkToKftXgZsrl6SAvC5LJBujP4PvGmnq9lVH5MI-g/edit?usp=sharing";
+    const CATALOG_XLSX_FILE = "./kuda-sebet-products.xlsx";
+    const CATALOG_XLSX_SHEET = "Товары";
 
-    const catalog = [
+    const fallbackCatalog = [
         {
             id: "cookies",
             name: "Печенья",
@@ -147,6 +150,21 @@
         copyBottomBtn: document.getElementById("copyBottomBtn"),
         copyCornerBtn: document.getElementById("copyCornerBtn"),
         copyMobileBtn: document.getElementById("copyMobileBtn"),
+        copyBottomMenuBtn: document.getElementById("copyBottomMenuBtn"),
+        copyCornerMenuBtn: document.getElementById("copyCornerMenuBtn"),
+        copyMobileMenuBtn: document.getElementById("copyMobileMenuBtn"),
+        copyBottomMenu: document.getElementById("copyBottomMenu"),
+        copyCornerMenu: document.getElementById("copyCornerMenu"),
+        copyMobileMenu: document.getElementById("copyMobileMenu"),
+        copyBottomWithPricesBtn: document.getElementById("copyBottomWithPricesBtn"),
+        copyCornerWithPricesBtn: document.getElementById("copyCornerWithPricesBtn"),
+        copyMobileWithPricesBtn: document.getElementById("copyMobileWithPricesBtn"),
+        commissionPassword: document.getElementById("commissionPassword"),
+        commissionUnlockBtn: document.getElementById("commissionUnlockBtn"),
+        commissionHint: document.getElementById("commissionHint"),
+        commissionControls: document.getElementById("commissionControls"),
+        commissionPercent: document.getElementById("commissionPercent"),
+        commissionResetBtn: document.getElementById("commissionResetBtn"),
         clearBottomBtn: document.getElementById("clearBottomBtn"),
         clearCornerBtn: document.getElementById("clearCornerBtn"),
         clearMobileBtn: document.getElementById("clearMobileBtn"),
@@ -159,18 +177,18 @@
         quantities: new Map(),
         prices: new Map(),
         customItems: new Map(),
-        priceMode: false
+        priceMode: false,
+        commissionUnlocked: false,
+        commissionPercent: 0
     };
+    const copyMenus = [
+        { toggleBtn: ui.copyBottomMenuBtn, menu: ui.copyBottomMenu },
+        { toggleBtn: ui.copyCornerMenuBtn, menu: ui.copyCornerMenu },
+        { toggleBtn: ui.copyMobileMenuBtn, menu: ui.copyMobileMenu }
+    ];
+    let catalog = fallbackCatalog;
 
-    catalog.forEach((category) => {
-        category.items.forEach((item) => {
-            itemIndex.set(item.id, { ...item, categoryId: category.id, categoryName: category.name });
-            defaultPrices.set(item.id, item.price);
-            state.quantities.set(item.id, 0);
-            state.prices.set(item.id, item.price);
-        });
-    });
-
+    await initCatalogData();
     initCustomCategorySelect();
     loadSession();
     renderCatalog();
@@ -184,6 +202,11 @@
     function clamp(value, min, max) {
         if (!Number.isFinite(value)) return min;
         return Math.min(max, Math.max(min, Math.round(value)));
+    }
+
+    function clampPercent(value) {
+        if (!Number.isFinite(value)) return 0;
+        return Math.min(300, Math.max(0, Math.round(value * 10) / 10));
     }
 
     function escapeHtml(text) {
@@ -209,6 +232,257 @@
             .replace(/[^a-zа-я0-9]+/gi, "-")
             .replace(/^-+|-+$/g, "")
             .slice(0, 40) || "custom-item";
+    }
+
+    function parsePrice(value) {
+        if (typeof value === "number") return clamp(value, 0, 100000);
+        const normalized = String(value || "")
+            .trim()
+            .replace(/\s+/g, "")
+            .replace(",", ".");
+        if (!normalized) return 0;
+        return clamp(Number(normalized), 0, 100000);
+    }
+
+    function buildGoogleSheetCsvUrls(shareUrl) {
+        try {
+            const url = new URL(String(shareUrl || ""));
+            const directCsv =
+                (url.searchParams.get("output") || "").toLowerCase() === "csv" ||
+                (url.searchParams.get("format") || "").toLowerCase() === "csv";
+            if (directCsv) return [url.toString()];
+
+            const idMatch = url.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+            if (!idMatch || !idMatch[1]) return [];
+
+            const hashParams = new URLSearchParams(String(url.hash || "").replace(/^#/, ""));
+            const gid = url.searchParams.get("gid") || hashParams.get("gid") || "0";
+            const encodedGid = encodeURIComponent(gid);
+            const spreadsheetId = idMatch[1];
+
+            return [
+                `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&gid=${encodedGid}`,
+                `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${encodedGid}`
+            ];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function parseCsvTable(csvText) {
+        const rows = [];
+        let row = [];
+        let cell = "";
+        let inQuotes = false;
+        const text = String(csvText || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+        for (let i = 0; i < text.length; i += 1) {
+            const char = text[i];
+
+            if (inQuotes) {
+                if (char === '"') {
+                    if (text[i + 1] === '"') {
+                        cell += '"';
+                        i += 1;
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    cell += char;
+                }
+                continue;
+            }
+
+            if (char === '"') {
+                inQuotes = true;
+                continue;
+            }
+
+            if (char === ",") {
+                row.push(cell);
+                cell = "";
+                continue;
+            }
+
+            if (char === "\n") {
+                row.push(cell);
+                rows.push(row);
+                row = [];
+                cell = "";
+                continue;
+            }
+
+            cell += char;
+        }
+
+        row.push(cell);
+        rows.push(row);
+
+        if (rows[0]?.[0]) {
+            rows[0][0] = String(rows[0][0]).replace(/^\uFEFF/, "");
+        }
+
+        while (rows.length > 0 && rows[rows.length - 1].every((value) => String(value || "").trim() === "")) {
+            rows.pop();
+        }
+
+        return rows;
+    }
+
+    function buildCatalogFromSheetRows(rows) {
+        if (!Array.isArray(rows) || rows.length < 2) return [];
+
+        const headers = Array.isArray(rows[0])
+            ? rows[0].map((cell) => String(cell || "").trim().toLowerCase())
+            : [];
+
+        const pickHeaderIndex = (matcher, fallbackIndex) => {
+            const index = headers.findIndex((header) => matcher.test(header));
+            return index >= 0 ? index : fallbackIndex;
+        };
+
+        const categoryCol = pickHeaderIndex(/катег|category/i, 0);
+        const itemCol = pickHeaderIndex(/товар|наимен|item|product/i, 1);
+        const priceCol = pickHeaderIndex(/цен|price|стоим/i, 2);
+
+        const categories = [];
+        const categoryByName = new Map();
+        const categoryIdCounter = new Map();
+        const itemIdCounter = new Map();
+
+        const ensureCategory = (categoryNameRaw) => {
+            const categoryName = String(categoryNameRaw || "").trim();
+            if (!categoryName) return null;
+            const normalized = normalizeItemName(categoryName);
+            if (categoryByName.has(normalized)) return categoryByName.get(normalized);
+
+            const baseId =
+                normalized === "дополнительно"
+                    ? "extra"
+                    : `cat-${slugifyName(categoryName)}`;
+            const nextCount = (categoryIdCounter.get(baseId) || 0) + 1;
+            categoryIdCounter.set(baseId, nextCount);
+            const categoryId = nextCount === 1 ? baseId : `${baseId}-${nextCount}`;
+            const category = { id: categoryId, name: categoryName, items: [] };
+            categoryByName.set(normalized, category);
+            categories.push(category);
+            return category;
+        };
+
+        for (let rowIndex = 1; rowIndex < rows.length; rowIndex += 1) {
+            const row = rows[rowIndex];
+            if (!Array.isArray(row)) continue;
+
+            const categoryName = String(row[categoryCol] || "").trim();
+            const itemName = String(row[itemCol] || "").trim();
+            if (!categoryName || !itemName) continue;
+
+            const category = ensureCategory(categoryName);
+            if (!category) continue;
+
+            const price = parsePrice(row[priceCol]);
+            const itemBaseId = `${category.id}-${slugifyName(itemName)}`;
+            const itemCount = (itemIdCounter.get(itemBaseId) || 0) + 1;
+            itemIdCounter.set(itemBaseId, itemCount);
+            const itemId = itemCount === 1 ? itemBaseId : `${itemBaseId}-${itemCount}`;
+
+            category.items.push({ id: itemId, name: itemName, price });
+        }
+
+        return categories.filter((category) => category.items.length > 0);
+    }
+
+    async function loadCatalogFromExcel() {
+        if (typeof window.XLSX === "undefined") return null;
+
+        const response = await fetch(CATALOG_XLSX_FILE, { cache: "no-store" });
+        if (!response.ok) {
+            throw new Error(`Unable to load ${CATALOG_XLSX_FILE}: ${response.status}`);
+        }
+
+        const workbookData = await response.arrayBuffer();
+        const workbook = window.XLSX.read(workbookData, { type: "array" });
+        if (!Array.isArray(workbook.SheetNames) || workbook.SheetNames.length === 0) return null;
+
+        const targetSheetName = workbook.SheetNames.includes(CATALOG_XLSX_SHEET)
+            ? CATALOG_XLSX_SHEET
+            : workbook.SheetNames[0];
+        const sheet = workbook.Sheets[targetSheetName];
+        if (!sheet) return null;
+
+        const rows = window.XLSX.utils.sheet_to_json(sheet, {
+            header: 1,
+            defval: "",
+            raw: true
+        });
+        const nextCatalog = buildCatalogFromSheetRows(rows);
+        return nextCatalog.length > 0 ? nextCatalog : null;
+    }
+
+    async function loadCatalogFromGoogleSheet() {
+        const csvUrls = buildGoogleSheetCsvUrls(GOOGLE_SHEET_SHARE_URL);
+        if (csvUrls.length === 0) return null;
+
+        let lastError = null;
+
+        for (const csvUrl of csvUrls) {
+            try {
+                const response = await fetch(csvUrl, { cache: "no-store" });
+                if (!response.ok) continue;
+
+                const csvText = await response.text();
+                if (/<!doctype html|<html[\s>]/i.test(csvText)) continue;
+
+                const rows = parseCsvTable(csvText);
+                const nextCatalog = buildCatalogFromSheetRows(rows);
+                if (nextCatalog.length > 0) return nextCatalog;
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        if (lastError) throw lastError;
+        return null;
+    }
+
+    function initializeCatalogState() {
+        itemIndex.clear();
+        defaultPrices.clear();
+        state.quantities.clear();
+        state.prices.clear();
+
+        catalog.forEach((category) => {
+            category.items.forEach((item) => {
+                itemIndex.set(item.id, { ...item, categoryId: category.id, categoryName: category.name });
+                defaultPrices.set(item.id, item.price);
+                state.quantities.set(item.id, 0);
+                state.prices.set(item.id, item.price);
+            });
+        });
+    }
+
+    async function initCatalogData() {
+        catalog = fallbackCatalog;
+        try {
+            const fromGoogleSheet = await loadCatalogFromGoogleSheet();
+            if (Array.isArray(fromGoogleSheet) && fromGoogleSheet.length > 0) {
+                catalog = fromGoogleSheet;
+                initializeCatalogState();
+                return;
+            }
+        } catch (error) {
+            console.warn("Failed to load catalog from Google Sheet. Trying Excel fallback.", error);
+        }
+
+        try {
+            const fromExcel = await loadCatalogFromExcel();
+            if (Array.isArray(fromExcel) && fromExcel.length > 0) {
+                catalog = fromExcel;
+            }
+        } catch (error) {
+            console.warn("Failed to load catalog from Excel. Built-in fallback catalog is used.", error);
+        }
+        initializeCatalogState();
     }
 
     function getCategoryById(categoryId) {
@@ -336,7 +610,19 @@
             count += qty;
         });
 
-        return { groups, total, count };
+        const subtotal = total;
+        const commissionPercent = state.commissionUnlocked ? state.commissionPercent : 0;
+        const commissionAmount = commissionPercent > 0 ? Math.round((subtotal * commissionPercent) / 100) : 0;
+        const finalTotal = subtotal + commissionAmount;
+
+        return {
+            groups,
+            subtotal,
+            commissionPercent,
+            commissionAmount,
+            total: finalTotal,
+            count
+        };
     }
 
     function buildSummaryHtml(groups) {
@@ -365,18 +651,27 @@
             .join("");
     }
 
-    function buildShareText(summary) {
+    function buildShareText(summary, options = {}) {
+        const includeItemPrices = Boolean(options.includeItemPrices);
+        const includeCommissionLine = options.includeCommissionLine !== false;
         const lines = ["Состав подарочной корзины", ""];
 
         summary.groups.forEach((group) => {
             lines.push(`${group.name}:`);
             group.items.forEach((item) => {
-                lines.push(`• ${item.name} ×${item.qty} — ${formatSom(item.lineTotal)}`);
+                if (includeItemPrices) {
+                    lines.push(`• ${item.name} ×${item.qty} — ${formatSom(item.lineTotal)}`);
+                    return;
+                }
+                lines.push(`• ${item.name} ×${item.qty}`);
             });
             lines.push("");
         });
 
         lines.push(`Позиций: ${summary.count}`);
+        if (includeCommissionLine && summary.commissionAmount > 0) {
+            lines.push(`Наценка (${summary.commissionPercent}%): ${formatSom(summary.commissionAmount)}`);
+        }
         lines.push(`Итоговая цена: ${formatSom(summary.total)}`);
         lines.push("");
         lines.push("Собрано в личном конструкторе Куда Себет.");
@@ -456,6 +751,44 @@
         }
     }
 
+    function unlockCommission() {
+        const password = ui.commissionPassword?.value.trim() || "";
+        if (password !== "362") {
+            if (ui.commissionHint) ui.commissionHint.textContent = "Неверный пароль.";
+            showToast("Неверный пароль для комиссии");
+            return;
+        }
+
+        state.commissionUnlocked = true;
+        if (ui.commissionPassword) ui.commissionPassword.value = "";
+        render();
+        showToast("Секция комиссии открыта");
+        ui.commissionPercent?.focus();
+    }
+
+    function setCommissionPercent(nextPercentRaw) {
+        if (!state.commissionUnlocked) return;
+
+        const raw = String(nextPercentRaw ?? "").trim();
+        if (!raw) {
+            state.commissionPercent = 0;
+            render();
+            return;
+        }
+
+        const parsed = Number(raw.replace(",", "."));
+        if (!Number.isFinite(parsed)) return;
+        state.commissionPercent = clampPercent(parsed);
+        render();
+    }
+
+    function closeCopyMenus() {
+        copyMenus.forEach(({ toggleBtn, menu }) => {
+            if (menu) menu.hidden = true;
+            toggleBtn?.setAttribute("aria-expanded", "false");
+        });
+    }
+
     function render() {
         const summary = collectSummary();
 
@@ -514,7 +847,37 @@
 
         if (ui.cornerCount) ui.cornerCount.textContent = String(summary.count);
         if (ui.floatingCartCount) ui.floatingCartCount.textContent = String(summary.count);
-        if (ui.summaryMeta) ui.summaryMeta.textContent = `${summary.count} позиций`;
+        if (ui.summaryMeta) {
+            const extra = summary.commissionAmount > 0 ? ` • наценка ${summary.commissionPercent}%` : "";
+            ui.summaryMeta.textContent = `${summary.count} позиций${extra}`;
+        }
+
+        if (ui.commissionControls) {
+            ui.commissionControls.hidden = !state.commissionUnlocked;
+        }
+
+        if (ui.commissionPassword) {
+            ui.commissionPassword.disabled = state.commissionUnlocked;
+        }
+
+        if (ui.commissionUnlockBtn) {
+            ui.commissionUnlockBtn.disabled = state.commissionUnlocked;
+            ui.commissionUnlockBtn.textContent = state.commissionUnlocked ? "Открыто" : "Открыть";
+        }
+
+        if (ui.commissionPercent && document.activeElement !== ui.commissionPercent) {
+            ui.commissionPercent.value = state.commissionPercent > 0 ? String(state.commissionPercent) : "";
+        }
+
+        if (ui.commissionHint) {
+            if (!state.commissionUnlocked) {
+                ui.commissionHint.textContent = "Секция закрыта.";
+            } else if (summary.commissionAmount > 0) {
+                ui.commissionHint.textContent = `Наценка ${summary.commissionPercent}% (+${formatSom(summary.commissionAmount)}).`;
+            } else {
+                ui.commissionHint.textContent = "Секция открыта. Введите процент наценки.";
+            }
+        }
 
         document.body.classList.toggle("price-edit-mode", state.priceMode);
         if (ui.priceModeBtn) {
@@ -632,22 +995,26 @@
             return;
         }
 
-        const message = buildShareText(summary);
+        const message = buildShareText(summary, { includeItemPrices: true });
         const url = `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(message)}`;
         window.open(url, "_blank", "noopener,noreferrer");
     }
 
-    async function copySummary() {
+    async function copySummary(options = {}) {
+        const includeItemPrices = Boolean(options.includeItemPrices);
         const summary = collectSummary();
         if (summary.groups.length === 0) {
             alert("Добавьте хотя бы один товар в корзину");
             return;
         }
 
-        const message = buildShareText(summary);
+        const message = buildShareText(summary, {
+            includeItemPrices,
+            includeCommissionLine: includeItemPrices
+        });
         try {
             await navigator.clipboard.writeText(message);
-            showToast("Состав скопирован");
+            showToast(includeItemPrices ? "Состав скопирован с ценами" : "Состав скопирован");
         } catch (error) {
             const helper = document.createElement("textarea");
             helper.value = message;
@@ -657,7 +1024,7 @@
             helper.select();
             document.execCommand("copy");
             helper.remove();
-            showToast("Состав скопирован");
+            showToast(includeItemPrices ? "Состав скопирован с ценами" : "Состав скопирован");
         }
     }
 
@@ -721,6 +1088,24 @@
             updateCustomQty(1);
         });
 
+        ui.commissionUnlockBtn?.addEventListener("click", unlockCommission);
+
+        ui.commissionPassword?.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            unlockCommission();
+        });
+
+        ui.commissionPercent?.addEventListener("input", (event) => {
+            setCommissionPercent(event.target.value);
+        });
+
+        ui.commissionResetBtn?.addEventListener("click", () => {
+            state.commissionPercent = 0;
+            render();
+            showToast("Наценка сброшена");
+        });
+
         ui.collapseAllBtn?.addEventListener("click", () => {
             categoryContainer.querySelectorAll(".pb-category").forEach((details) => {
                 details.open = false;
@@ -749,7 +1134,33 @@
         });
 
         [ui.copyBottomBtn, ui.copyCornerBtn, ui.copyMobileBtn].forEach((btn) => {
-            btn?.addEventListener("click", copySummary);
+            btn?.addEventListener("click", () => {
+                closeCopyMenus();
+                copySummary({ includeItemPrices: false });
+            });
+        });
+
+        [ui.copyBottomWithPricesBtn, ui.copyCornerWithPricesBtn, ui.copyMobileWithPricesBtn].forEach((btn) => {
+            btn?.addEventListener("click", () => {
+                closeCopyMenus();
+                copySummary({ includeItemPrices: true });
+            });
+        });
+
+        copyMenus.forEach(({ toggleBtn, menu }) => {
+            toggleBtn?.addEventListener("click", (event) => {
+                event.stopPropagation();
+                if (!menu) return;
+                const isOpen = !menu.hidden;
+                closeCopyMenus();
+                if (isOpen) return;
+                menu.hidden = false;
+                toggleBtn.setAttribute("aria-expanded", "true");
+            });
+
+            menu?.addEventListener("click", (event) => {
+                event.stopPropagation();
+            });
         });
 
         ui.floatingCartBtn?.addEventListener("click", () => {
@@ -765,8 +1176,15 @@
             setSheetOpen(false);
         });
 
+        document.addEventListener("click", (event) => {
+            if (event.target.closest(".pb-copy-dropdown")) return;
+            closeCopyMenus();
+        });
+
         document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") setSheetOpen(false);
+            if (event.key !== "Escape") return;
+            setSheetOpen(false);
+            closeCopyMenus();
         });
     }
 })();

@@ -385,6 +385,46 @@ a {
     width: 100%;
 }
 
+.pb-commission {
+    margin-top: 12px;
+    border: 1px solid #f1dcc8;
+    border-radius: 12px;
+    background: #fff9f2;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+}
+
+.pb-commission__head h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #8f4518;
+}
+
+.pb-commission__head p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.35;
+    color: #6e5a49;
+}
+
+.pb-commission__gate,
+.pb-commission__controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+}
+
+.pb-commission__controls[hidden] {
+    display: none;
+}
+
+.pb-commission__hint {
+    font-size: 13px;
+    line-height: 1.35;
+    color: #7a614d;
+}
+
 .pb-btn,
 .pb-float-cart,
 .pb-close-btn,
@@ -448,6 +488,56 @@ a {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
+}
+
+.pb-copy-dropdown {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 38px;
+    gap: 6px;
+}
+
+.pb-copy-toggle {
+    padding: 0;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.pb-copy-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 210px;
+    border: 1px solid #efceb0;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 12px 22px rgba(36, 18, 7, 0.16);
+    padding: 6px;
+    z-index: 40;
+}
+
+.pb-copy-menu[hidden] {
+    display: none;
+}
+
+.pb-copy-menu__item {
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    min-height: 36px;
+    padding: 8px 10px;
+    background: #fff;
+    color: #6f3815;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pb-copy-menu__item:hover,
+.pb-copy-menu__item:focus-visible {
+    border-color: #eac6a4;
+    background: #fff6eb;
 }
 
 .pb-total-line {
@@ -741,6 +831,11 @@ a {
     }
 
     .pb-custom-add__form {
+        grid-template-columns: 1fr;
+    }
+
+    .pb-commission__gate,
+    .pb-commission__controls {
         grid-template-columns: 1fr;
     }
 
