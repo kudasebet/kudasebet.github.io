@@ -29,6 +29,7 @@ body {
 body {
     margin: 0;
     min-height: 100vh;
+    min-height: 100svh;
     font-family: "Manrope", "Segoe UI", Arial, sans-serif;
     color: var(--ink);
     background:
@@ -920,7 +921,7 @@ body:not(.summary-edit-mode) .pb-edit-toggle {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: var(--pb-sticky-bottom-offset, 0px);
     padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
     border-top: 1px solid #efcdb0;
     background: rgba(255, 252, 248, 0.98);
