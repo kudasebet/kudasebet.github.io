@@ -1011,9 +1011,8 @@ body:not(.summary-edit-mode) .pb-edit-toggle {
         position: fixed;
         top: calc(12px + env(safe-area-inset-top));
         right: 12px;
-        display: grid;
-        grid-template-columns: repeat(2, 40px);
-        grid-template-rows: repeat(2, 40px);
+        display: flex;
+        align-items: center;
         gap: 6px;
         z-index: 58;
         opacity: 0;
@@ -1048,11 +1047,11 @@ body:not(.summary-edit-mode) .pb-edit-toggle {
         transform: scale(0.98);
     }
 
-    #priceModeMobileFloatBtn {
+    #priceModeMobileFloatBtn.is-pencil {
         transform: scaleX(-1);
     }
 
-    #priceModeMobileFloatBtn:active {
+    #priceModeMobileFloatBtn.is-pencil:active {
         transform: scaleX(-1) scale(0.98);
     }
 
@@ -1066,8 +1065,8 @@ body:not(.summary-edit-mode) .pb-edit-toggle {
         grid-template-columns: 1fr;
     }
 
-    .pb-controls {
-        grid-template-columns: 1fr;
+    #topControls {
+        display: none;
     }
 
     .pb-item {

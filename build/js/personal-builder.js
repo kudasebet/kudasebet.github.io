@@ -127,8 +127,7 @@
         resetPricesBtn: document.getElementById("resetPricesBtn"),
         toggleAllFloatBtn: document.getElementById("toggleAllFloatBtn"),
         priceModeFloatBtn: document.getElementById("priceModeFloatBtn"),
-        collapseAllMobileFloatBtn: document.getElementById("collapseAllMobileFloatBtn"),
-        expandAllMobileFloatBtn: document.getElementById("expandAllMobileFloatBtn"),
+        toggleAllMobileFloatBtn: document.getElementById("toggleAllMobileFloatBtn"),
         priceModeMobileFloatBtn: document.getElementById("priceModeMobileFloatBtn"),
         resetPricesMobileFloatBtn: document.getElementById("resetPricesMobileFloatBtn"),
         customProductForm: document.getElementById("customProductForm"),
@@ -872,9 +871,16 @@
     }
 
     function syncFloatingToggleButton() {
-        if (!ui.toggleAllFloatBtn) return;
         const openCount = getOpenCategoriesCount();
-        ui.toggleAllFloatBtn.textContent = openCount >= 2 ? "Свернуть все" : "Развернуть все";
+        if (ui.toggleAllFloatBtn) {
+            ui.toggleAllFloatBtn.textContent = openCount >= 2 ? "Свернуть все" : "Развернуть все";
+        }
+        if (ui.toggleAllMobileFloatBtn) {
+            const shouldCollapse = openCount >= 1;
+            ui.toggleAllMobileFloatBtn.textContent = shouldCollapse ? "−" : "+";
+            ui.toggleAllMobileFloatBtn.setAttribute("aria-label", shouldCollapse ? "Свернуть все" : "Развернуть все");
+            ui.toggleAllMobileFloatBtn.setAttribute("title", shouldCollapse ? "Свернуть все" : "Развернуть все");
+        }
     }
 
     function scrollToCollapsedCatalogPreview() {
@@ -1002,12 +1008,16 @@
         });
 
         if (ui.priceModeMobileFloatBtn) {
-            const label = state.priceMode ? "Выключить режим редактирования цен" : "Включить режим редактирования цен";
+            const isPriceEditActive = state.priceMode;
+            const label = isPriceEditActive ? "Сохранить применённые цены" : "Включить режим редактирования цен";
             ui.priceModeMobileFloatBtn.classList.toggle("is-active", state.priceMode);
+            ui.priceModeMobileFloatBtn.classList.toggle("is-pencil", !isPriceEditActive);
+            ui.priceModeMobileFloatBtn.textContent = isPriceEditActive ? "✓" : "✎";
             ui.priceModeMobileFloatBtn.setAttribute("aria-label", label);
             ui.priceModeMobileFloatBtn.setAttribute("title", label);
         }
 
+        syncFloatingToggleButton();
         updateFloatingControlsVisibility();
     }
 
@@ -1278,9 +1288,6 @@
             (event) => {
                 if (!event.target?.classList?.contains("pb-category")) return;
                 syncFloatingToggleButton();
-                if (!event.target.open) {
-                    scheduleCollapsedCatalogPreview();
-                }
             },
             true
         );
@@ -1355,21 +1362,22 @@
             showToast("Наценка сброшена");
         });
 
-        [ui.collapseAllBtn, ui.collapseAllMobileFloatBtn].forEach((button) => {
-            button?.addEventListener("click", () => {
-                setAllCategoriesOpen(false);
-            });
+        ui.collapseAllBtn?.addEventListener("click", () => {
+            setAllCategoriesOpen(false);
         });
 
-        [ui.expandAllBtn, ui.expandAllMobileFloatBtn].forEach((button) => {
-            button?.addEventListener("click", () => {
-                setAllCategoriesOpen(true);
-            });
+        ui.expandAllBtn?.addEventListener("click", () => {
+            setAllCategoriesOpen(true);
         });
 
         ui.toggleAllFloatBtn?.addEventListener("click", () => {
             const openCount = getOpenCategoriesCount();
             setAllCategoriesOpen(openCount < 2);
+        });
+
+        ui.toggleAllMobileFloatBtn?.addEventListener("click", () => {
+            const openCount = getOpenCategoriesCount();
+            setAllCategoriesOpen(openCount === 0);
         });
 
         [ui.priceModeBtn, ui.priceModeFloatBtn, ui.priceModeMobileFloatBtn].forEach((button) => {
