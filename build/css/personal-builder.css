@@ -1010,12 +1010,14 @@ body:not(.summary-edit-mode) .pb-edit-toggle {
 
     .pb-controls-mobile-floating {
         position: fixed;
-        top: calc(12px + env(safe-area-inset-top));
-        right: 12px;
+        top: auto;
+        right: auto;
+        left: 12px;
+        bottom: calc(var(--pb-sticky-bottom-offset, 0px) + var(--pb-sticky-total-height, 72px) + 8px);
         display: flex;
         align-items: center;
-        gap: 6px;
-        z-index: 58;
+        gap: 5px;
+        z-index: 63;
         opacity: 0;
         transform: translateY(-8px);
         pointer-events: none;
@@ -1029,13 +1031,13 @@ body:not(.summary-edit-mode) .pb-edit-toggle {
     }
 
     .pb-controls-mobile-floating__btn {
-        width: 40px;
-        height: 40px;
+        width: 34px;
+        height: 34px;
         border: 1px solid #e9c4a2;
-        border-radius: 12px;
+        border-radius: 10px;
         background: rgba(255, 250, 244, 0.92);
         color: #7f3e15;
-        font-size: 18px;
+        font-size: 15px;
         font-weight: 800;
         line-height: 1;
         padding: 0;

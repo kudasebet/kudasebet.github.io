@@ -847,9 +847,8 @@
 
     function updateFloatingControlsVisibility() {
         const desktopAnchorRect = ui.topControls?.getBoundingClientRect();
-        const categoryAnchorRect = categoryContainer.getBoundingClientRect();
         const desktopShouldShow = desktopAnchorRect ? desktopAnchorRect.bottom < 24 : window.scrollY > 140;
-        const mobileShouldShow = categoryAnchorRect.top <= 24;
+        const mobileShouldShow = window.scrollY > 4;
 
         if (ui.floatingControls) {
             if (window.innerWidth <= 860) {
@@ -870,6 +869,9 @@
 
     function updateStickyTotalViewportOffset() {
         if (!ui.stickyTotalBar) return;
+        const stickyHeight = Math.max(0, Math.round(ui.stickyTotalBar.getBoundingClientRect().height || 0));
+        document.documentElement.style.setProperty("--pb-sticky-total-height", `${stickyHeight}px`);
+
         if (window.innerWidth > 1159) {
             ui.stickyTotalBar.style.setProperty("--pb-sticky-bottom-offset", "0px");
             return;
