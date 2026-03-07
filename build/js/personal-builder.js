@@ -139,7 +139,6 @@
         customProductQtyInc: document.getElementById("customProductQtyInc"),
         customProductCategory: document.getElementById("customProductCategory"),
         summaryMeta: document.getElementById("summaryMeta"),
-        summarySection: document.getElementById("summarySection"),
         toggleSummaryEditBtn: document.getElementById("toggleSummaryEditBtn"),
         toggleCornerEditBtn: document.getElementById("toggleCornerEditBtn"),
         toggleMobileEditBtn: document.getElementById("toggleMobileEditBtn"),
@@ -879,14 +878,14 @@
     }
 
     function scrollToCollapsedCatalogPreview() {
-        if (!ui.summarySection) return;
-        const summaryTop = window.scrollY + ui.summarySection.getBoundingClientRect().top;
-        const previewOffset = Math.max(120, Math.min(260, Math.round(window.innerHeight * 0.38)));
-        const targetTop = Math.max(0, summaryTop - previewOffset);
+        const catalogTop = window.scrollY + categoryContainer.getBoundingClientRect().top;
+        const topPadding = window.innerWidth <= 600 ? 16 : 24;
+        const targetTop = Math.max(0, catalogTop - topPadding);
         window.scrollTo({ top: targetTop, behavior: "smooth" });
     }
 
     function scheduleCollapsedCatalogPreview() {
+        if (window.innerWidth > 1160) return;
         window.clearTimeout(scheduleCollapsedCatalogPreview.timer);
         scheduleCollapsedCatalogPreview.timer = window.setTimeout(() => {
             window.requestAnimationFrame(() => {

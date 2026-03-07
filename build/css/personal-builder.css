@@ -1009,7 +1009,7 @@ body:not(.summary-edit-mode) .pb-edit-toggle {
 
     .pb-controls-mobile-floating {
         position: fixed;
-        top: calc(96px + env(safe-area-inset-top));
+        top: calc(12px + env(safe-area-inset-top));
         right: 12px;
         display: grid;
         grid-template-columns: repeat(2, 40px);
