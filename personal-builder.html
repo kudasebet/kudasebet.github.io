@@ -28,11 +28,21 @@
 
     <main class="pb-main">
         <div class="pb-shell">
-            <section class="pb-controls" aria-label="Управление">
+            <section class="pb-controls" id="topControls" aria-label="Управление">
                 <button class="pb-btn pb-btn--light" type="button" id="collapseAllBtn">Свернуть все</button>
                 <button class="pb-btn pb-btn--light" type="button" id="expandAllBtn">Развернуть все</button>
                 <button class="pb-btn pb-btn--light" type="button" id="priceModeBtn">Режим цен: выкл</button>
                 <button class="pb-btn pb-btn--light" type="button" id="resetPricesBtn">Сбросить цены</button>
+            </section>
+            <section class="pb-controls pb-controls--floating" id="floatingControls" aria-label="Плавающее управление">
+                <button class="pb-btn pb-btn--light" type="button" id="toggleAllFloatBtn">Свернуть все</button>
+                <button class="pb-btn pb-btn--light" type="button" id="priceModeFloatBtn">Режим цен: выкл</button>
+            </section>
+            <section class="pb-controls-mobile-floating" id="mobileFloatingControls" aria-label="Мобильное плавающее управление">
+                <button class="pb-controls-mobile-floating__btn" type="button" id="collapseAllMobileFloatBtn" aria-label="Свернуть все" title="Свернуть все">−</button>
+                <button class="pb-controls-mobile-floating__btn" type="button" id="expandAllMobileFloatBtn" aria-label="Развернуть все" title="Развернуть все">+</button>
+                <button class="pb-controls-mobile-floating__btn" type="button" id="priceModeMobileFloatBtn" aria-label="Режим редактирования цен" title="Режим редактирования цен">✎</button>
+                <button class="pb-controls-mobile-floating__btn" type="button" id="resetPricesMobileFloatBtn" aria-label="Сбросить цены" title="Сбросить цены">↺</button>
             </section>
 
             <section class="pb-catalog" aria-label="Категории товаров">
@@ -42,7 +52,10 @@
             <section class="pb-summary" id="summarySection" aria-label="Итоговый состав">
                 <div class="pb-summary__head">
                     <h2>Выбранный состав</h2>
-                    <div class="pb-summary__meta" id="summaryMeta">0 позиций</div>
+                    <div class="pb-summary__head-controls">
+                        <div class="pb-summary__meta" id="summaryMeta">0 позиций</div>
+                        <button class="pb-edit-toggle" type="button" id="toggleSummaryEditBtn" aria-label="Включить редактирование состава" title="Редактировать состав">✎</button>
+                    </div>
                 </div>
                 <div class="pb-summary__list" id="bottomSummaryList">
                     <div class="pb-empty">Добавьте товары, чтобы увидеть состав корзины.</div>
@@ -98,7 +111,10 @@
     <aside class="pb-corner-cart" id="cornerCart" aria-label="Корзина справа">
         <div class="pb-corner-cart__head">
             <h3>Корзина</h3>
-            <span id="cornerCount">0</span>
+            <div class="pb-corner-cart__head-controls">
+                <button class="pb-edit-toggle pb-edit-toggle--compact" type="button" id="toggleCornerEditBtn" aria-label="Включить редактирование состава" title="Редактировать состав">✎</button>
+                <span id="cornerCount">0</span>
+            </div>
         </div>
         <div class="pb-corner-cart__list" id="cornerCartList">
             <div class="pb-empty">Пока пусто</div>
@@ -126,7 +142,10 @@
     <section class="pb-mobile-sheet" id="mobileCartSheet" aria-hidden="true">
         <div class="pb-mobile-sheet__head">
             <h3>Корзина</h3>
-            <button class="pb-close-btn" type="button" id="closeMobileSheetBtn" aria-label="Закрыть">×</button>
+            <div class="pb-mobile-sheet__head-actions">
+                <button class="pb-edit-toggle pb-edit-toggle--compact" type="button" id="toggleMobileEditBtn" aria-label="Включить редактирование состава" title="Редактировать состав">✎</button>
+                <button class="pb-close-btn" type="button" id="closeMobileSheetBtn" aria-label="Закрыть">×</button>
+            </div>
         </div>
         <div class="pb-mobile-sheet__list" id="mobileCartList">
             <div class="pb-empty">Пока пусто</div>

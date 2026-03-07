@@ -118,10 +118,19 @@
     if (!categoryContainer) return;
 
     const ui = {
+        topControls: document.getElementById("topControls"),
+        floatingControls: document.getElementById("floatingControls"),
+        mobileFloatingControls: document.getElementById("mobileFloatingControls"),
         collapseAllBtn: document.getElementById("collapseAllBtn"),
         expandAllBtn: document.getElementById("expandAllBtn"),
         priceModeBtn: document.getElementById("priceModeBtn"),
         resetPricesBtn: document.getElementById("resetPricesBtn"),
+        toggleAllFloatBtn: document.getElementById("toggleAllFloatBtn"),
+        priceModeFloatBtn: document.getElementById("priceModeFloatBtn"),
+        collapseAllMobileFloatBtn: document.getElementById("collapseAllMobileFloatBtn"),
+        expandAllMobileFloatBtn: document.getElementById("expandAllMobileFloatBtn"),
+        priceModeMobileFloatBtn: document.getElementById("priceModeMobileFloatBtn"),
+        resetPricesMobileFloatBtn: document.getElementById("resetPricesMobileFloatBtn"),
         customProductForm: document.getElementById("customProductForm"),
         customProductName: document.getElementById("customProductName"),
         customProductPrice: document.getElementById("customProductPrice"),
@@ -130,6 +139,10 @@
         customProductQtyInc: document.getElementById("customProductQtyInc"),
         customProductCategory: document.getElementById("customProductCategory"),
         summaryMeta: document.getElementById("summaryMeta"),
+        summarySection: document.getElementById("summarySection"),
+        toggleSummaryEditBtn: document.getElementById("toggleSummaryEditBtn"),
+        toggleCornerEditBtn: document.getElementById("toggleCornerEditBtn"),
+        toggleMobileEditBtn: document.getElementById("toggleMobileEditBtn"),
         bottomSummaryList: document.getElementById("bottomSummaryList"),
         bottomSummaryTotal: document.getElementById("bottomSummaryTotal"),
         cornerCartList: document.getElementById("cornerCartList"),
@@ -178,6 +191,7 @@
         prices: new Map(),
         customItems: new Map(),
         priceMode: false,
+        summaryEditMode: false,
         commissionUnlocked: false,
         commissionPercent: 0
     };
@@ -186,6 +200,7 @@
         { toggleBtn: ui.copyCornerMenuBtn, menu: ui.copyCornerMenu },
         { toggleBtn: ui.copyMobileMenuBtn, menu: ui.copyMobileMenu }
     ];
+    const editModeButtons = [ui.toggleSummaryEditBtn, ui.toggleCornerEditBtn, ui.toggleMobileEditBtn];
     let catalog = fallbackCatalog;
 
     await initCatalogData();
@@ -580,7 +595,15 @@
                 const price = state.prices.get(item.id) || 0;
                 const lineTotal = price * qty;
                 const group = ensureGroup(category.id, category.name);
-                group.items.push({ id: item.id, name: item.name, qty, price, lineTotal });
+                group.items.push({
+                    id: item.id,
+                    name: item.name,
+                    qty,
+                    price,
+                    lineTotal,
+                    removeType: "base",
+                    removeKey: item.id
+                });
                 group.categoryTotal += lineTotal;
                 group.categoryCount += qty;
                 total += lineTotal;
@@ -602,7 +625,9 @@
                 name: customItem.name,
                 qty,
                 price,
-                lineTotal
+                lineTotal,
+                removeType: "custom",
+                removeKey: customKey
             });
             group.categoryTotal += lineTotal;
             group.categoryCount += qty;
@@ -639,8 +664,40 @@
                             .map(
                                 (item) => `
                                 <div class="pb-selected-item">
-                                    <span>${escapeHtml(item.name)} × ${item.qty}</span>
-                                    <span>${formatSom(item.lineTotal)}</span>
+                                    <span>${escapeHtml(item.name)}${state.summaryEditMode ? "" : ` × ${item.qty}`}</span>
+                                    <div class="pb-selected-item__right">
+                                        ${
+                                            state.summaryEditMode
+                                                ? `
+                                        <div class="pb-selected-item__qty-edit" role="group" aria-label="Изменить количество товара">
+                                            <input
+                                                class="pb-selected-item__qty-input"
+                                                type="number"
+                                                min="1"
+                                                max="99"
+                                                step="1"
+                                                inputmode="numeric"
+                                                data-action="selected-qty-input"
+                                                data-remove-type="${escapeHtml(item.removeType || "base")}"
+                                                data-remove-key="${encodeURIComponent(String(item.removeKey || item.id || ""))}"
+                                                value="${item.qty}"
+                                                aria-label="Количество товара ${escapeHtml(item.name)}"
+                                            >
+                                            <div class="pb-selected-item__qty-stepper" aria-hidden="false">
+                                                <button class="pb-selected-item__qty-step-btn" type="button" data-action="selected-qty-step" data-delta="1" data-remove-type="${escapeHtml(item.removeType || "base")}" data-remove-key="${encodeURIComponent(String(item.removeKey || item.id || ""))}" aria-label="Увеличить количество">▲</button>
+                                                <button class="pb-selected-item__qty-step-btn" type="button" data-action="selected-qty-step" data-delta="-1" data-remove-type="${escapeHtml(item.removeType || "base")}" data-remove-key="${encodeURIComponent(String(item.removeKey || item.id || ""))}" aria-label="Уменьшить количество">▼</button>
+                                            </div>
+                                        </div>
+                                        `
+                                                : ""
+                                        }
+                                        <span>${formatSom(item.lineTotal)}</span>
+                                        ${
+                                            state.summaryEditMode
+                                                ? `<button class="pb-selected-remove-btn" type="button" data-action="remove-selected-item" data-remove-type="${escapeHtml(item.removeType || "base")}" data-remove-key="${encodeURIComponent(String(item.removeKey || item.id || ""))}" aria-label="Удалить товар из состава">×</button>`
+                                                : ""
+                                        }
+                                    </div>
                                 </div>
                             `
                             )
@@ -789,6 +846,57 @@
         });
     }
 
+    function updateFloatingControlsVisibility() {
+        if (!ui.topControls) return;
+        const anchorRect = ui.topControls.getBoundingClientRect();
+        const shouldShow = anchorRect.bottom < 24;
+
+        if (ui.floatingControls) {
+            if (window.innerWidth <= 860) {
+                ui.floatingControls.classList.remove("is-visible");
+            } else {
+                ui.floatingControls.classList.toggle("is-visible", shouldShow);
+            }
+        }
+
+        if (ui.mobileFloatingControls) {
+            if (window.innerWidth > 860) {
+                ui.mobileFloatingControls.classList.remove("is-visible");
+            } else {
+                ui.mobileFloatingControls.classList.toggle("is-visible", shouldShow);
+            }
+        }
+    }
+
+    function getOpenCategoriesCount() {
+        return Array.from(categoryContainer.querySelectorAll(".pb-category")).filter((entry) => entry.open).length;
+    }
+
+    function syncFloatingToggleButton() {
+        if (!ui.toggleAllFloatBtn) return;
+        const openCount = getOpenCategoriesCount();
+        ui.toggleAllFloatBtn.textContent = openCount >= 2 ? "Свернуть все" : "Развернуть все";
+    }
+
+    function scrollToCollapsedCatalogPreview() {
+        if (!ui.summarySection) return;
+        const summaryTop = window.scrollY + ui.summarySection.getBoundingClientRect().top;
+        const previewOffset = Math.max(120, Math.min(260, Math.round(window.innerHeight * 0.38)));
+        const targetTop = Math.max(0, summaryTop - previewOffset);
+        window.scrollTo({ top: targetTop, behavior: "smooth" });
+    }
+
+    function scheduleCollapsedCatalogPreview() {
+        window.clearTimeout(scheduleCollapsedCatalogPreview.timer);
+        scheduleCollapsedCatalogPreview.timer = window.setTimeout(() => {
+            window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(() => {
+                    scrollToCollapsedCatalogPreview();
+                });
+            });
+        }, 70);
+    }
+
     function render() {
         const summary = collectSummary();
 
@@ -879,10 +987,29 @@
             }
         }
 
+        editModeButtons.forEach((button) => {
+            if (!button) return;
+            const modeLabel = state.summaryEditMode ? "Отключить редактирование состава" : "Включить редактирование состава";
+            button.textContent = state.summaryEditMode ? "✔" : "✎";
+            button.setAttribute("aria-label", modeLabel);
+            button.setAttribute("title", modeLabel);
+        });
+
+        document.body.classList.toggle("summary-edit-mode", state.summaryEditMode);
         document.body.classList.toggle("price-edit-mode", state.priceMode);
-        if (ui.priceModeBtn) {
-            ui.priceModeBtn.textContent = `Режим цен: ${state.priceMode ? "вкл" : "выкл"}`;
+        [ui.priceModeBtn, ui.priceModeFloatBtn].forEach((button) => {
+            if (!button) return;
+            button.textContent = `Режим цен: ${state.priceMode ? "вкл" : "выкл"}`;
+        });
+
+        if (ui.priceModeMobileFloatBtn) {
+            const label = state.priceMode ? "Выключить режим редактирования цен" : "Включить режим редактирования цен";
+            ui.priceModeMobileFloatBtn.classList.toggle("is-active", state.priceMode);
+            ui.priceModeMobileFloatBtn.setAttribute("aria-label", label);
+            ui.priceModeMobileFloatBtn.setAttribute("title", label);
         }
+
+        updateFloatingControlsVisibility();
     }
 
     function updateQuantity(itemId, delta) {
@@ -906,6 +1033,78 @@
         const current = clamp(Number(ui.customProductQty.textContent || 1), 1, 99);
         const next = clamp(current + delta, 1, 99);
         ui.customProductQty.textContent = String(next);
+    }
+
+    function setAllCategoriesOpen(isOpen) {
+        let hadOpenCategory = false;
+        categoryContainer.querySelectorAll(".pb-category").forEach((details) => {
+            if (!isOpen && details.open) hadOpenCategory = true;
+            details.open = isOpen;
+        });
+        syncFloatingToggleButton();
+        if (!isOpen && hadOpenCategory) {
+            scheduleCollapsedCatalogPreview();
+        }
+    }
+
+    function decodeDataKey(encodedKey) {
+        const raw = String(encodedKey || "");
+        if (!raw) return "";
+        try {
+            return decodeURIComponent(raw);
+        } catch (error) {
+            return raw;
+        }
+    }
+
+    function setSelectedItemQty(removeType, removeKey, nextQtyRaw) {
+        const key = String(removeKey || "");
+        if (!key) return;
+
+        const nextQty = clamp(Number(nextQtyRaw), 1, 99);
+
+        if (removeType === "custom") {
+            const existing = state.customItems.get(key);
+            if (!existing) return;
+
+            existing.qty = nextQty;
+            state.customItems.set(key, existing);
+        } else {
+            if (!itemIndex.has(key)) return;
+            state.quantities.set(key, nextQty);
+        }
+
+        saveSession();
+        render();
+    }
+
+    function adjustSelectedItemQty(removeType, removeKey, delta) {
+        if (!Number.isFinite(delta) || delta === 0) return;
+        const key = String(removeKey || "");
+        if (!key) return;
+
+        const currentQty =
+            removeType === "custom"
+                ? state.customItems.get(key)?.qty || 0
+                : state.quantities.get(key) || 0;
+        setSelectedItemQty(removeType, key, currentQty + delta);
+    }
+
+    function removeSelectedItem(removeType, removeKey) {
+        const key = String(removeKey || "");
+        if (!key) return;
+
+        if (removeType === "custom") {
+            if (!state.customItems.has(key)) return;
+            state.customItems.delete(key);
+        } else {
+            if (!itemIndex.has(key)) return;
+            state.quantities.set(key, 0);
+        }
+
+        saveSession();
+        render();
+        showToast("Товар удалён из состава");
     }
 
     function addCustomProduct() {
@@ -1075,6 +1274,18 @@
             setPrice(itemId, input.value);
         });
 
+        categoryContainer.addEventListener(
+            "toggle",
+            (event) => {
+                if (!event.target?.classList?.contains("pb-category")) return;
+                syncFloatingToggleButton();
+                if (!event.target.open) {
+                    scheduleCollapsedCatalogPreview();
+                }
+            },
+            true
+        );
+
         ui.customProductForm?.addEventListener("submit", (event) => {
             event.preventDefault();
             addCustomProduct();
@@ -1086,6 +1297,45 @@
 
         ui.customProductQtyInc?.addEventListener("click", () => {
             updateCustomQty(1);
+        });
+
+        editModeButtons.forEach((button) => {
+            button?.addEventListener("click", () => {
+                state.summaryEditMode = !state.summaryEditMode;
+                render();
+            });
+        });
+
+        [ui.bottomSummaryList, ui.cornerCartList, ui.mobileCartList].forEach((listNode) => {
+            listNode?.addEventListener("click", (event) => {
+                const actionBtn = event.target.closest("[data-action]");
+                if (!actionBtn) return;
+
+                const action = actionBtn.dataset.action;
+                if (!action) return;
+
+                const removeType = actionBtn.dataset.removeType || "base";
+                const removeKey = decodeDataKey(actionBtn.dataset.removeKey || "");
+
+                if (action === "remove-selected-item") {
+                    removeSelectedItem(removeType, removeKey);
+                    return;
+                }
+
+                if (action === "selected-qty-step") {
+                    const delta = Number(actionBtn.dataset.delta || 0);
+                    adjustSelectedItemQty(removeType, removeKey, delta);
+                }
+            });
+
+            listNode?.addEventListener("change", (event) => {
+                const input = event.target.closest('[data-action="selected-qty-input"]');
+                if (!input) return;
+
+                const removeType = input.dataset.removeType || "base";
+                const removeKey = decodeDataKey(input.dataset.removeKey || "");
+                setSelectedItemQty(removeType, removeKey, input.value);
+            });
         });
 
         ui.commissionUnlockBtn?.addEventListener("click", unlockCommission);
@@ -1106,24 +1356,33 @@
             showToast("Наценка сброшена");
         });
 
-        ui.collapseAllBtn?.addEventListener("click", () => {
-            categoryContainer.querySelectorAll(".pb-category").forEach((details) => {
-                details.open = false;
+        [ui.collapseAllBtn, ui.collapseAllMobileFloatBtn].forEach((button) => {
+            button?.addEventListener("click", () => {
+                setAllCategoriesOpen(false);
             });
         });
 
-        ui.expandAllBtn?.addEventListener("click", () => {
-            categoryContainer.querySelectorAll(".pb-category").forEach((details) => {
-                details.open = true;
+        [ui.expandAllBtn, ui.expandAllMobileFloatBtn].forEach((button) => {
+            button?.addEventListener("click", () => {
+                setAllCategoriesOpen(true);
             });
         });
 
-        ui.priceModeBtn?.addEventListener("click", () => {
-            state.priceMode = !state.priceMode;
-            render();
+        ui.toggleAllFloatBtn?.addEventListener("click", () => {
+            const openCount = getOpenCategoriesCount();
+            setAllCategoriesOpen(openCount < 2);
         });
 
-        ui.resetPricesBtn?.addEventListener("click", resetPrices);
+        [ui.priceModeBtn, ui.priceModeFloatBtn, ui.priceModeMobileFloatBtn].forEach((button) => {
+            button?.addEventListener("click", () => {
+                state.priceMode = !state.priceMode;
+                render();
+            });
+        });
+
+        [ui.resetPricesBtn, ui.resetPricesMobileFloatBtn].forEach((button) => {
+            button?.addEventListener("click", resetPrices);
+        });
 
         [ui.clearBottomBtn, ui.clearCornerBtn, ui.clearMobileBtn].forEach((btn) => {
             btn?.addEventListener("click", clearAllSelection);
@@ -1186,5 +1445,9 @@
             setSheetOpen(false);
             closeCopyMenus();
         });
+
+        window.addEventListener("scroll", updateFloatingControlsVisibility, { passive: true });
+        window.addEventListener("resize", updateFloatingControlsVisibility);
+        updateFloatingControlsVisibility();
     }
 })();
