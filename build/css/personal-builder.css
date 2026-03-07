@@ -24,6 +24,7 @@ body {
     width: 100%;
     max-width: 100%;
     overflow-x: clip;
+    touch-action: manipulation;
 }
 
 body {
@@ -42,6 +43,13 @@ body {
 a {
     color: inherit;
     text-decoration: none;
+    touch-action: manipulation;
+}
+
+button,
+[role="button"],
+summary {
+    touch-action: manipulation;
 }
 
 .pb-shell {

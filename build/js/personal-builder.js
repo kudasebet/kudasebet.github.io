@@ -223,6 +223,20 @@
         return Math.min(300, Math.max(0, Math.round(value * 10) / 10));
     }
 
+    function preventRapidTapZoom() {
+        if (!window.matchMedia("(pointer: coarse)").matches) return;
+
+        document.addEventListener(
+            "dblclick",
+            (event) => {
+                const target = event.target;
+                if (target instanceof Element && target.closest("input, textarea, select")) return;
+                event.preventDefault();
+            },
+            { passive: false }
+        );
+    }
+
     function escapeHtml(text) {
         return String(text)
             .replaceAll("&", "&amp;")
@@ -1488,5 +1502,6 @@
         window.visualViewport?.addEventListener("scroll", updateStickyTotalViewportOffset);
         updateFloatingControlsVisibility();
         updateStickyTotalViewportOffset();
+        preventRapidTapZoom();
     }
 })();
