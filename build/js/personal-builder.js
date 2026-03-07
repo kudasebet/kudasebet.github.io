@@ -884,7 +884,9 @@
         }
 
         const layoutHeight = document.documentElement.clientHeight;
-        const visualBottom = viewport.offsetTop + viewport.height;
+        const viewportOffsetTop = Math.max(0, Number(viewport.offsetTop) || 0);
+        const viewportHeight = Math.max(0, Number(viewport.height) || 0);
+        const visualBottom = viewportOffsetTop + viewportHeight;
         const bottomOffset = Math.max(0, layoutHeight - visualBottom);
         ui.stickyTotalBar.style.setProperty("--pb-sticky-bottom-offset", `${bottomOffset}px`);
     }
